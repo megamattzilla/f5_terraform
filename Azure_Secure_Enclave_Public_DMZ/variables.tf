@@ -66,7 +66,8 @@ variable f5vm02tosrvfl  { default = "198.19.0.52" }
 variable f5vm02frsrv    { default = "198.19.0.142" }
 # f5vm02frsrvfl's last octet needs to be higher than  f5vm02frsrv's last octet (we want to automap to selfIP not floatingIP)
 variable f5vm02frsrvfl  { default = "198.19.0.152" }
-variable backend01ext   { default = "10.80.1.101" }
+variable nginxlb01ext   { default = "10.80.1.101" }
+variable nginxapp01ext   { default = "10.80.1.201" }
 variable l3fwmgmt       { default = "10.90.1.60" }
 variable l3fwuntrust    { default = "198.19.0.60" }
 variable l3fwtrust      { default = "198.19.0.160" }

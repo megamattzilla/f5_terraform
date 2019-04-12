@@ -73,7 +73,7 @@ locals {
 # Create Network Peerings
 resource "azurerm_virtual_network_peering" "HubToSpoke" {
   name                      = "HubToSpoke"
-  depends_on                = ["azurerm_virtual_machine.backendvm"]
+  depends_on                = ["azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
   resource_group_name       = "${azurerm_resource_group.main.name}"
   virtual_network_name      = "${azurerm_virtual_network.main.name}"
   remote_virtual_network_id = "${azurerm_virtual_network.spoke.id}"
@@ -83,7 +83,7 @@ resource "azurerm_virtual_network_peering" "HubToSpoke" {
 
 resource "azurerm_virtual_network_peering" "SpokeToHub" {
   name                      = "HubToSpoke"
-  depends_on                = ["azurerm_virtual_machine.backendvm"]
+  depends_on                = ["azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
   resource_group_name       = "${azurerm_resource_group.main.name}"
   virtual_network_name      = "${azurerm_virtual_network.spoke.name}"
   remote_virtual_network_id = "${azurerm_virtual_network.main.id}"
@@ -270,6 +270,32 @@ resource "azurerm_network_security_group" "main" {
     source_port_range          = "*"
     destination_port_range     = "8443"
     source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "allow_nginxapp01_node1"
+    description                = "Allow HTTP access for nginxapp01 Node1"
+    priority                   = 150
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "9001"
+    source_address_prefix      = "10.80.1.101/32"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "allow_nginxapp01_node2"
+    description                = "Allow HTTP access for nginxapp01 Node2"
+    priority                   = 160
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "9002"
+    source_address_prefix      = "10.80.1.101/32"
     destination_address_prefix = "*"
   }
 
@@ -526,9 +552,9 @@ resource "azurerm_network_interface" "vm02-frsrv-nic" {
   }
 }
 
-# Create the Interface for the App server
-resource "azurerm_network_interface" "backend01-ext-nic" {
-  name                = "${var.prefix}-backend01-ext-nic"
+# Create the Interface for the Nginx load balancer
+resource "azurerm_network_interface" "nginxlb01-ext-nic" {
+  name                = "${var.prefix}-nginxlb01-ext-nic"
   location            = "${azurerm_resource_group.main.location}"
   resource_group_name = "${azurerm_resource_group.main.name}"
   network_security_group_id = "${azurerm_network_security_group.main.id}"
@@ -537,12 +563,37 @@ resource "azurerm_network_interface" "backend01-ext-nic" {
     name                          = "primary"
     subnet_id                     = "${azurerm_subnet.App1.id}"
     private_ip_address_allocation = "Static"
-    private_ip_address            = "${var.backend01ext}"
+    private_ip_address            = "${var.nginxlb01ext}"
     primary			  = true
   }
 
   tags {
-    Name           = "${var.environment}-backend01-ext-int"
+    Name           = "${var.environment}-nginxlb01-ext-int"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "app1"
+  }
+}
+
+# Create the Interface for the Nginx app server
+resource "azurerm_network_interface" "nginxapp01-ext-nic" {
+  name                = "${var.prefix}-nginxapp01-ext-nic"
+  location            = "${azurerm_resource_group.main.location}"
+  resource_group_name = "${azurerm_resource_group.main.name}"
+  network_security_group_id = "${azurerm_network_security_group.main.id}"
+
+  ip_configuration {
+    name                          = "primary"
+    subnet_id                     = "${azurerm_subnet.App1.id}"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "${var.nginxapp01ext}"
+    primary			  = true
+  }
+
+  tags {
+    Name           = "${var.environment}-nginxapp01-ext-int"
     environment    = "${var.environment}"
     owner          = "${var.owner}"
     group          = "${var.group}"
@@ -837,13 +888,13 @@ resource "azurerm_virtual_machine" "f5vm02" {
   }
 }
 
-# backend VM
-resource "azurerm_virtual_machine" "backendvm" {
-    name                  = "backendvm"
+# Nginx Load Balancer VM
+resource "azurerm_virtual_machine" "nginxlb01" {
+    name                  = "nginxlb01"
     location                     = "${azurerm_resource_group.main.location}"
     resource_group_name          = "${azurerm_resource_group.main.name}"
 
-    network_interface_ids = ["${azurerm_network_interface.backend01-ext-nic.id}"]
+    network_interface_ids = ["${azurerm_network_interface.nginxlb01-ext-nic.id}"]
     vm_size               = "Standard_DS3_v2"
 
     storage_os_disk {
@@ -861,7 +912,7 @@ resource "azurerm_virtual_machine" "backendvm" {
     }
 
     os_profile {
-        computer_name  = "backend01"
+        computer_name  = "nginxlb01"
         admin_username = "azureuser"
         admin_password = "${var.upassword}"
         custom_data = <<-EOF
@@ -877,7 +928,7 @@ resource "azurerm_virtual_machine" "backendvm" {
     }
 
   tags {
-    Name           = "${var.environment}-backend01"
+    Name           = "${var.environment}-nginxlb01"
     environment    = "${var.environment}"
     owner          = "${var.owner}"
     group          = "${var.group}"
@@ -886,6 +937,55 @@ resource "azurerm_virtual_machine" "backendvm" {
   }
 }
 
+# Nginx App Server VM
+resource "azurerm_virtual_machine" "nginxapp01" {
+    name                  = "nginxapp01"
+    location                     = "${azurerm_resource_group.main.location}"
+    resource_group_name          = "${azurerm_resource_group.main.name}"
+
+    network_interface_ids = ["${azurerm_network_interface.nginxapp01-ext-nic.id}"]
+    vm_size               = "Standard_DS3_v2"
+
+    storage_os_disk {
+        name              = "backendOsDisk"
+        caching           = "ReadWrite"
+        create_option     = "FromImage"
+        managed_disk_type = "Premium_LRS"
+    }
+
+    storage_image_reference {
+        publisher = "Canonical"
+        offer     = "UbuntuServer"
+        sku       = "16.04.0-LTS"
+        version   = "latest"
+    }
+
+    os_profile {
+        computer_name  = "nginxapp01"
+        admin_username = "azureuser"
+        admin_password = "${var.upassword}"
+        custom_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y docker.io
+              docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
+              EOF
+    }
+
+    os_profile_linux_config {
+        disable_password_authentication = false
+    }
+
+  tags {
+    Name           = "${var.environment}-nginxapp01"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+# Create SSLO inspection zone VM 
 resource "azurerm_virtual_machine" "l3fwvm" {
   name                         = "${var.prefix}-l3fwvm"
   location                     = "${azurerm_resource_group.main.location}"
@@ -922,7 +1022,7 @@ resource "azurerm_virtual_machine" "l3fwvm" {
 # Run Startup Script
 resource "azurerm_virtual_machine_extension" "f5vm01-run-startup-cmd" {
   name                 = "${var.environment}-f5vm01-run-startup-cmd"
-  depends_on           = ["azurerm_virtual_machine.f5vm01", "azurerm_virtual_machine.backendvm"]
+  depends_on           = ["azurerm_virtual_machine.f5vm01", "azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.main.name}"
   virtual_machine_name = "${azurerm_virtual_machine.f5vm01.name}"
@@ -951,7 +1051,7 @@ resource "azurerm_virtual_machine_extension" "f5vm01-run-startup-cmd" {
 
 resource "azurerm_virtual_machine_extension" "f5vm02-run-startup-cmd" {
   name                 = "${var.environment}-f5vm02-run-startup-cmd"
-  depends_on           = ["azurerm_virtual_machine.f5vm02", "azurerm_virtual_machine.backendvm"]
+  depends_on           = ["azurerm_virtual_machine.f5vm02", "azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.main.name}"
   virtual_machine_name = "${azurerm_virtual_machine.f5vm02.name}"
@@ -1066,7 +1166,7 @@ data "azurerm_public_ip" "vm02mgmtpip" {
 data "azurerm_public_ip" "lbpip" {
   name                = "${azurerm_public_ip.lbpip.name}"
   resource_group_name = "${azurerm_resource_group.main.name}"
-  depends_on          = ["azurerm_virtual_machine.backendvm"]
+  depends_on          = ["azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
 }
 data "azurerm_public_ip" "l3fwmgmtpip" {
   name                = "${azurerm_public_ip.l3fwmgmtpip.name}"
