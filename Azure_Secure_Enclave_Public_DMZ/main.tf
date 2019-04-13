@@ -898,7 +898,7 @@ resource "azurerm_virtual_machine" "nginxlb01" {
     vm_size               = "Standard_DS3_v2"
 
     storage_os_disk {
-        name              = "backendOsDisk"
+        name              = "nginxlb01Disk"
         caching           = "ReadWrite"
         create_option     = "FromImage"
         managed_disk_type = "Premium_LRS"
@@ -919,7 +919,7 @@ resource "azurerm_virtual_machine" "nginxlb01" {
               #!/bin/bash
               apt-get update -y
               apt-get install -y docker.io
-              docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
+              #docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
               EOF
     }
 
@@ -947,7 +947,7 @@ resource "azurerm_virtual_machine" "nginxapp01" {
     vm_size               = "Standard_DS3_v2"
 
     storage_os_disk {
-        name              = "backendOsDisk"
+        name              = "nginxapp01Disk"
         caching           = "ReadWrite"
         create_option     = "FromImage"
         managed_disk_type = "Premium_LRS"
@@ -968,7 +968,7 @@ resource "azurerm_virtual_machine" "nginxapp01" {
               #!/bin/bash
               apt-get update -y
               apt-get install -y docker.io
-              docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
+              #docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
               EOF
     }
 
