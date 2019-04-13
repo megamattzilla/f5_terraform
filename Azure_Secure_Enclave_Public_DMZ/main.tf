@@ -1022,7 +1022,7 @@ resource "azurerm_virtual_machine" "l3fwvm" {
 # Run Startup Script
 resource "azurerm_virtual_machine_extension" "f5vm01-run-startup-cmd" {
   name                 = "${var.environment}-f5vm01-run-startup-cmd"
-  depends_on           = ["azurerm_virtual_machine.f5vm01", "azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
+  depends_on           = ["azurerm_virtual_machine.f5vm01", "azurerm_virtual_machine.nginxlb01"]
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.main.name}"
   virtual_machine_name = "${azurerm_virtual_machine.f5vm01.name}"
@@ -1051,7 +1051,7 @@ resource "azurerm_virtual_machine_extension" "f5vm01-run-startup-cmd" {
 
 resource "azurerm_virtual_machine_extension" "f5vm02-run-startup-cmd" {
   name                 = "${var.environment}-f5vm02-run-startup-cmd"
-  depends_on           = ["azurerm_virtual_machine.f5vm02", "azurerm_virtual_machine.nginxlb01", "azurerm_virtual_machine.nginxapp01"]
+  depends_on           = ["azurerm_virtual_machine.f5vm02", "azurerm_virtual_machine.nginxlb01"]
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.main.name}"
   virtual_machine_name = "${azurerm_virtual_machine.f5vm02.name}"
