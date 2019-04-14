@@ -919,7 +919,7 @@ resource "azurerm_virtual_machine" "nginxlb01" {
               #!/bin/bash
               apt-get update -y
               apt-get install -y docker.io
-              #docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
+              docker run -d -p 80:80 --net=host --restart unless-stopped megamattzilla/nginx-lb
               EOF
     }
 
@@ -968,7 +968,8 @@ resource "azurerm_virtual_machine" "nginxapp01" {
               #!/bin/bash
               apt-get update -y
               apt-get install -y docker.io
-              #docker run -d -p 80:80 --net=host --restart unless-stopped vulnerables/web-dvwa
+              docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped megamattzilla/nginx-node1
+              docker run -d -p 9002:9002 --name=nginx-node2 --restart unless-stopped megamattzilla/nginx-node2
               EOF
     }
 
