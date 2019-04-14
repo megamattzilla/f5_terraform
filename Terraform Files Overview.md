@@ -556,3 +556,71 @@ resource "azurerm_virtual_machine_extension" "f5vm02-run-startup-cmd" {
   }
 }
 ```
+#### 12. Send Declarative Onboarding json payload to F5 VMs API endpoint
+```
+resource "null_resource" "f5vm01-run-REST" {
+  depends_on	= ["azurerm_virtual_machine_extension.f5vm01-run-startup-cmd"]
+  # Running DO REST API
+  provisioner "local-exec" {
+    command = <<-EOF
+      #!/bin/bash
+      curl -k -X GET https://${data.azurerm_public_ip.vm01mgmtpip.ip_address}${var.rest_do_uri} \
+              -H "Content-Type: application/json" \
+              -u ${var.uname}:${var.upassword}
+      sleep 15
+      curl -k -X ${var.rest_do_method} https://${data.azurerm_public_ip.vm01mgmtpip.ip_address}${var.rest_do_uri} \
+              -H "Content-Type: application/json" \
+	      -u ${var.uname}:${var.upassword} \
+	      -d @${var.rest_vm01_do_file} 
+    EOF
+  }
+  
+  resource "null_resource" "f5vm02-run-REST" {
+  depends_on	= ["azurerm_virtual_machine_extension.f5vm02-run-startup-cmd"]
+  # Running DO REST API
+  provisioner "local-exec" {
+    command = <<-EOF
+      #!/bin/bash
+      curl -k -X GET https://${data.azurerm_public_ip.vm02mgmtpip.ip_address}${var.rest_do_uri} \
+              -H "Content-Type: application/json" \
+              -u ${var.uname}:${var.upassword}
+      sleep 15
+      curl -k -X ${var.rest_do_method} https://${data.azurerm_public_ip.vm02mgmtpip.ip_address}${var.rest_do_uri} \
+              -H "Content-Type: application/json" \
+	      -u ${var.uname}:${var.upassword} \
+	      -d @${var.rest_vm02_do_file}
+    EOF
+  }
+```
+#### 13. Send Application Service 3 json payload to F5 VMs API endpoint
+```
+# Running AS3 REST API
+  provisioner "local-exec" {
+    command = <<-EOF
+      #!/bin/bash
+      curl -k -X ${var.rest_as3_method} https://${data.azurerm_public_ip.vm01mgmtpip.ip_address}${var.rest_as3_uri} \
+              -H "Content-Type: application/json" \
+	      -u ${var.uname}:${var.upassword} \
+	      -d @${var.rest_vm_as3_file}
+    EOF
+  }
+}
+
+ # Running AS3 REST API
+  provisioner "local-exec" {
+    command = <<-EOF
+      #!/bin/bash
+      curl -k -X ${var.rest_as3_method} https://${data.azurerm_public_ip.vm02mgmtpip.ip_address}${var.rest_as3_uri} \
+              -H "Content-Type: application/json" \
+	      -u ${var.uname}:${var.upassword} \
+	      -d @${var.rest_vm_as3_file}
+    EOF
+  }
+}
+```
+## The main.tf is now fully executed, and upon successful deployment will build all required resources for a two-tier F5 and Nginx deployment. 
+
+
+
+
+  
