@@ -17,7 +17,7 @@ docker run --name some-nginx -v /some/content:/usr/share/nginx/html:ro -d nginx
 nginx 1.15.11 is the current release. Ubuntu default repo will commonly install an older version like 1.14.0. You can install the latest by adding a repo from Nginx or run via docker which uses the latest version be default.  
 
 ### Configure Nginx
-Nginx can be configured as a web server hosting static or dynamic content, or perform load balancing. The same Nginx installation could be both a web server and load balancer on different ports or depending attributes such as HTTP host header. 
+Nginx can be configured as a web server hosting static or dynamic content or perform load balancing. The same Nginx installation could be both a web server and load balancer on different ports or depending attributes such as HTTP host header. 
 
 All configuration files for Nginx should be placed in `/etc/nginx/conf.d/`. By default, any configuration file located in this directory with a .conf extension will be loaded into Nginx on startup or by triggering a configuration reload with command `nginx -s reload`. 
 
@@ -50,7 +50,7 @@ server {
 
 Nginx OSS supports balancing methods, round robin (default), least connections, generic hash, random (my favorite), and IP hash. 
 
-Nginx OSS supports passive health checks only. Nginx OSS can not perform probing to determine if an upstream server is avalible. 
+Nginx OSS supports passive health checks only. Nginx OSS cannot perform probing to determine if an upstream server is available. 
 
 Example of passive health check configuration:
 ```
@@ -95,6 +95,6 @@ http {
 }
 ```
 
-## More documentation on avalible Nginx features can be found on nginx.com and the O'reilly Nginx Cookbook (free). 
+## More documentation on Nginx can be found on nginx.com and the O'REILLY Nginx Cookbook (free). 
 
 
