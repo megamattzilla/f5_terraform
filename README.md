@@ -6,9 +6,9 @@
 
 ## To get started, clone this repository to a system that has terraform installed
 
-## Edit variables
+### Edit Variables
 
-variables.tf contains a few variables that need modified for each deployment.
+**variables.tf** contains a few variables that need modified for each deployment.
 
 1. Enter your Azure subscription and authentication information:
 ```
@@ -39,7 +39,7 @@ variable license2             { default = "xxxxx" }
 ```
 If you would rather use pay as you go licensing leave these as default and comment-out the line in main.tf that mentions BYOL
 
-## Navigate to the directory containing the cloned repository .tf files and run terraform init command:
+## Navigate to the directory containing the cloned repository .tf files and run `terraform init` command:
 `terraform init`
 You should see output similar to the following:
 ```
@@ -70,7 +70,7 @@ commands will detect it and remind you to do so if necessary.
 ```
 If you get an error about a failure to download null provider- try agian in a few minutes.
 
-## Build the template by running terraform apply command
+## Build the template by running `terraform apply` command
 `terraform apply`
 Enter `yes` at the prompt. This will take ~15 minutes to build. 
 
@@ -81,7 +81,7 @@ Note the output for ALB_app1_pip which will be an IP Address
 
 ## In a web browser, navigate to page https://<ALB_app1_pip IP Address> 
 
-## To tear down the build run the terraform destroy command
+## To tear down the build run the `terraform destroy` command
 `terraform destroy`
 Enter `yes` at the prompt. This will take ~15 minutes to destroy. 
 
