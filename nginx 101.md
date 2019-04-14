@@ -34,5 +34,21 @@ server {
 }
 ```
 
+Example configuration to load balance HTTP traffic (on port 80) to two upstream HTTP servers:
+```
+upstream backend {
+  server 10.10.12.45:80;
+  server app.example.com:80;
+}
+server {
+  location / {
+    proxy_pass http://backend;
+  }
+}
+```
+
+Nginx OSS supports balancing methods, round robin (default), least connections, generic hash, random (my favorite), and IP hash. 
+
+
 
 
