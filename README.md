@@ -41,7 +41,7 @@ If you would rather use pay as you go licensing leave these as default and comme
 
 ## Navigate to the directory containing the cloned repository .tf files and run `terraform init` command:
 `terraform init`
-You should see output similar to the following:
+You should see output like the following:
 ```
 Initializing provider plugins...
 
@@ -68,13 +68,13 @@ If you ever set or change modules or backend configuration for Terraform,
 rerun this command to reinitialize your working directory. If you forget, other
 commands will detect it and remind you to do so if necessary.
 ```
-If you get an error about a failure to download null provider- try agian in a few minutes.
+If you get an error about a failure to download null provider- try again in a few minutes.
 
 ## Build the template by running `terraform apply` command
 `terraform apply`
 Enter `yes` at the prompt. This will take ~15 minutes to build. 
 
-At the end you should see output indicating the build was successfull:
+At the end you should see output indicating the build was successful:
 `Apply complete! Resources: 47 added, 0 changed, 0 destroyed.`
 
 Note the output for ALB_app1_pip which will be an IP Address
@@ -86,6 +86,6 @@ Note the output for ALB_app1_pip which will be an IP Address
 `terraform destroy`
 Enter `yes` at the prompt. This will take ~15 minutes to destroy. 
 
-At the end you should see output indicating the destroy was successfull:
+At the end you should see output indicating the destroy was successful:
 `Destroy complete! Resources: 0 added, 0 changed, 47 destroyed.`
 
