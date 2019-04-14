@@ -46,6 +46,8 @@ This will build an image named nginx-node1 and store the image in your local doc
 
 This container could be run with `docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped nginx-node1`
 
+### These container could optionally be uploaded to Docker Hub using a free Docker account. 
+
 
 
 
