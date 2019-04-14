@@ -37,7 +37,7 @@ variable license2             { default = "xxxxx" }
 ```
 If you would rather use Pay as you go licensing leave these as blank and comment-out the line in main.tf that mentions BYOL
 
-## CD to the directory containing the repository *tf files and run terraform init:
+## CD to the directory containing the repository .tf files and run terraform init:
 `terraform init`
 You should see output similar to the following:
 ```
