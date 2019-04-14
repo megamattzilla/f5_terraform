@@ -11,7 +11,7 @@ provider "azurerm" {
 }
 ```
 
-## **main.tf** contains the code to create the Azure networking components, F5, and Nginx resouces. 
+## **main.tf** contains the code to create the Azure networking components, F5, and Nginx resources. 
 
 #### 1. Create the Azure resource group where all Azure components will be built:
 ```
@@ -21,7 +21,7 @@ resource "azurerm_resource_group" "main" {
   location = "${var.location}"
 }
 ```
-#### 2. Create two virtual networks to acheive the Hub (DMZ) and Spoke (Application) topology. Additional spoke networks could be created for additional applications.  
+#### 2. Create two virtual networks to achieve the Hub (DMZ) and Spoke (Application) topology. Additional spoke networks could be created for additional applications.  
 ```# Create a Virtual Network within the Resource Group
 resource "azurerm_virtual_network" "main" {
   name			= "${var.prefix}-hub"
