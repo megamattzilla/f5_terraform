@@ -79,9 +79,10 @@ At the end you should see output indicating the build was successfull:
 
 Note the output for ALB_app1_pip which will be an IP Address
 
-## In a web browser, navigate to page https://<ALB_app1_pip IP Address> 
+## Test the deployment- In a web browser, navigate to https://<ALB_app1_pip IP Address>
+*Accept the self-signed SSL certificate warning. 
 
-## To tear down the build run the `terraform destroy` command
+## Tear down the build run the `terraform destroy` command
 `terraform destroy`
 Enter `yes` at the prompt. This will take ~15 minutes to destroy. 
 
