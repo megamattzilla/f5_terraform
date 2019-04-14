@@ -2,6 +2,8 @@
 
 * Azure_Secure_Enclave_Public_DMZ - This Terraform template uses the Azurerm provider to build out all the necessary Azure objects and then use F5 Declarative Onboarding and AS3 REST ochistration tool for initial onboarding and configuration 
 
+![alt text](https://github.com/megamattzilla/f5_terraform/blob/master/nginx-f5-deployment.png "F5 and Nginx Deployment")
+
 ## To get started, clone this repositoy to a system that has terraform installed
 
 ## Edit variables
