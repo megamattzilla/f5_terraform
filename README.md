@@ -1,4 +1,4 @@
-# Fork of Azure_Secure_Enclave_Public_DMZ modified for a two tier F5 and Nginx infrastructure-as-code deployment
+# Two Tier F5 and Nginx Infrastructure-as-Code Deployment
 
 * Azure_Secure_Enclave_Public_DMZ - This Terraform template uses the Azurerm provider to build out all the necessary Azure objects and then use F5 Declarative Onboarding and AS3 REST orchestration tool for initial onboarding and configuration. 
 
