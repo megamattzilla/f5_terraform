@@ -21,7 +21,7 @@ This will build an image named nginx-lb and store the image in your local docker
 
 This container could be run with `docker run -d -p 80:80 --net=host --restart unless-stopped nginx-lb`
 
-## Repeat the proccess to build a custom nginx container to host content [nginx-node1](https://github.com/megamattzilla/f5_terraform/tree/master/Dockerfile/nginx-node1).
+## Repeat the process  to build a custom nginx container to host content [nginx-node1](https://github.com/megamattzilla/f5_terraform/tree/master/Dockerfile/nginx-node1).
 
 [nginx-node1/Dockerfile](https://github.com/megamattzilla/f5_terraform/blob/master/Dockerfile/nginx-node1/Dockerfile) contains:
 ```
@@ -46,7 +46,7 @@ This will build an image named nginx-node1 and store the image in your local doc
 
 This container could be run with `docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped nginx-node1`
 
-### These container could optionally be uploaded to Docker Hub using a free Docker account. 
+### These containers could optionally be uploaded to Docker Hub using a free Docker account. 
 
 
 
