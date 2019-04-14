@@ -1,0 +1,38 @@
+# Nginx OSS (Open Source Software)
+
+## Getting Started
+
+### Install on Debian/Ubuntu 
+```
+apt-get update
+apt-get install nginx
+```
+### Run via Docker
+```
+docker run --name some-nginx -v /some/content:/usr/share/nginx/html:ro -d nginx
+```
+### Verify Installation
+`nginx -v`
+
+nginx 1.15.11 is the current release. Ubuntu default repo will commonly install an older version like 1.14.0. You can install the latest by adding a repo from Nginx or run via docker which uses the latest version be default.  
+
+### Configure Nginx
+Nginx can be configured as a web server hosting static or dynamic content, or perform load balancing. The same Nginx installation could be both a web server and load balancer on different ports or depending attributes such as HTTP host header. 
+
+All configuration files for Nginx should be placed in `/etc/nginx/conf.d/`. By default, any configuration file located in this directory with a .conf extension will be loaded into Nginx on startup or by triggering a configuration reload with command `nginx -s reload`. 
+
+Example configuration to serve static content as a web server:
+```
+server {
+  listen 80 default_server;
+  server_name www.example.com;
+  location / {
+    root /usr/share/nginx/html;
+    # alias /usr/share/nginx/html;
+    index index.html index.htm;
+  }
+}
+```
+
+
+
