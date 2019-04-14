@@ -49,6 +49,51 @@ server {
 
 Nginx OSS supports balancing methods, round robin (default), least connections, generic hash, random (my favorite), and IP hash. 
 
+Nginx OSS supports passive health checks only. Nginx OSS can not perform probing to determine if an upstream server is avalible. 
 
+Example of passive health check configuration:
+```
+upstream backend {
+server backend1.example.com:1234 max_fails=3 fail_timeout=3s;
+server backend2.example.com:1234 max_fails=3 fail_timeout=3s;
+}
+```
+If 3 sessions failed within 3 seconds, the upsream server will be removed from service for 3 seconds. 
+
+### A/B testing
+Nginx when acting as a load balancer can split traffic between two or more pools to facilitate A/B or canary testing. 
+
+Example configuration of load balancing with A/B testing:
+```
+http {
+    # ...
+    # application version 1a 
+    upstream version_1a {
+        server 10.0.0.100:3001;
+        server 10.0.0.101:3001;
+    }
+
+    # application version 1b
+    upstream version_1b {
+        server 10.0.0.104:6002;
+        server 10.0.0.105:6002;
+    }
+
+    split_clients "{$remote_addr}" $appversion {
+        95%     version_1a;
+        *       version_1b;
+    }
+
+    server {
+        # ...
+        listen 80;
+        location / {
+            proxy_pass http://$appversion;
+        }
+    }
+}
+```
+
+## More documentation on avalible Nginx features can be found on nginx.com and the O'reilly Nginx Cookbook (free). 
 
 
