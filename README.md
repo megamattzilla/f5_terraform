@@ -68,7 +68,7 @@ commands will detect it and remind you to do so if necessary.
 ```
 If you get an error about a failure to download null provider- try agian in a few minutes.
 
-##Apply the template by running terraform apply
+## Apply the template by running terraform apply
 `terraform apply`
 Enter `yes` at the prompt. This will take ~15 minutes to build. 
 
@@ -77,5 +77,5 @@ At the end you should see output indicating the build was successfull:
 
 Note the output for ALB_app1_pip which will be an IP Address
 
-##In a web browser, navigate to page https://<ALB_app1_pip IP Address> 
+## In a web browser, navigate to page https://<ALB_app1_pip IP Address> 
 
