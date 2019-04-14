@@ -1,6 +1,6 @@
-## Terraform Files Overview
+# Terraform Files Overview
 
-**provider.tf** instructs terraform to use the azure resource manager plugin for terraform. The Azure variables required are located in **variables.tf** 
+## **provider.tf** instructs terraform to use the azure resource manager plugin for terraform. The Azure variables required are located in **variables.tf** 
 
 ```# Configure the Microsoft Azure Provider, replace Service Principal and Subscription with your own
 provider "azurerm" {
@@ -11,7 +11,7 @@ provider "azurerm" {
 }
 ```
 
-**main.tf** contains the code to create the Azure networking components, F5, and Nginx resouces. 
+## **main.tf** contains the code to create the Azure networking components, F5, and Nginx resouces. 
 
 #### 1. Create the Azure resource group where all Azure components will be built:
 ```
