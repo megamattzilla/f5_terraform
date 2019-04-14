@@ -19,7 +19,7 @@ docker build -t nginx-lb .
 ```
 This will build an image named nginx-lb and store the image in your local docker repository. 
 
-This container could be ran with `docker run -d -p 80:80 --net=host --restart unless-stopped nginx-lb`
+This container could be run with `docker run -d -p 80:80 --net=host --restart unless-stopped nginx-lb`
 
 ## Repeat the proccess to build a custom nginx container to host content [nginx-node1](https://github.com/megamattzilla/f5_terraform/tree/master/Dockerfile/nginx-node1).
 
@@ -44,7 +44,7 @@ docker build -t nginx-node1 .
 ```
 This will build an image named nginx-node1 and store the image in your local docker repository. 
 
-This container could be ran with `docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped nginx-node1`
+This container could be run with `docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped nginx-node1`
 
 
 
