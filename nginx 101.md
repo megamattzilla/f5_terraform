@@ -41,6 +41,7 @@ upstream backend {
   server app.example.com:80;
 }
 server {
+  listen 80;
   location / {
     proxy_pass http://backend;
   }
