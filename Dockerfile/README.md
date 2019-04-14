@@ -1,6 +1,6 @@
 # Dockerfile for custom nginx-lb and nginx-node containers. 
 
-## To build custom nginx containers download the Dockerfiles in this repo. 
+## To build custom nginx containers download the Dockerfiles in this repo. This will allow you to bake your desired Nginx configuration into the container itself. 
 
 ## For a nginx container that functions as a load balancer only you could use the Dockerfile in [nginx-lb](https://github.com/megamattzilla/f5_terraform/blob/master/Dockerfile/nginx-lb/).
 
