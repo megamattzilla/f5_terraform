@@ -183,3 +183,376 @@ resource "azurerm_network_interface_backend_address_pool_association" "bpool_ass
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.backend_pool.id}"
 }
 ```
+#### 5. Create the F5 script file which when executed later will install declarative onboarding module (DO) and application services 3 extension (AS3).
+Take the shell script onboard.tpl from this repository and render it as a template file called "vm_onboard" using some variables from variables.tf. 
+```# Setup Onboarding scripts
+data "template_file" "vm_onboard" {
+  template = "${file("${path.module}/onboard.tpl")}"
+
+  vars {
+    uname        	  = "${var.uname}"
+    upassword        	  = "${var.upassword}"
+    DO_onboard_URL        = "${var.DO_onboard_URL}"
+    AS3_URL		  = "${var.AS3_URL}"
+    sslo_URL		  = "${var.sslo_URL}"
+    libs_dir		  = "${var.libs_dir}"
+    onboard_log		  = "${var.onboard_log}"
+  }
+}
+```
+#### 6. Create the Declarative Onboarding (DO) JSON payload for F5 VM01 and VM02. When DO is executed later it will license the F5's, provision LTM and create the F5 self IPs, hostname, sync failover device group, DNS, routing, NTP, username, and password.  
+Take the JSON file cluster.json from this repository and render it as two template files called "vm01_do_json" and "vm02_do_json" using some variables from variables.tf.
+```
+data "template_file" "vm01_do_json" {
+  template = "${file("${path.module}/cluster.json")}"
+
+  vars {
+    #Uncomment the following line for BYOL
+    regkey	    = "${var.license1}"
+
+    host1	    = "${var.host1_name}"
+    host2	    = "${var.host2_name}"
+    local_host      = "${var.host1_name}"
+    local_selfip1   = "${var.f5vm01ext}"
+    local_selfip2   = "${var.f5vm01tosrv}"
+    local_selfip3   = "${var.f5vm01frsrv}"
+    tosrvfl1	    = "${var.f5vm01tosrvfl}"
+    tosrvfl2       = "${var.f5vm02tosrvfl}"
+    frsrvfl1	    = "${var.f5vm01frsrvfl}"
+    frsrvfl2       = "${var.f5vm02frsrvfl}"
+    remote_selfip   = "${var.f5vm01ext}"
+    gateway	    = "${local.ext_gw}"
+    dns_server	    = "${var.dns_server}"
+    ntp_server	    = "${var.ntp_server}"
+    timezone	    = "${var.timezone}"
+    admin_user      = "${var.uname}"
+    admin_password  = "${var.upassword}"
+  }
+}
+
+data "template_file" "vm02_do_json" {
+  template = "${file("${path.module}/cluster.json")}"
+
+  vars {
+    #Uncomment the following line for BYOL
+    regkey         = "${var.license2}"
+
+    host1           = "${var.host1_name}"
+    host2           = "${var.host2_name}"
+    local_host      = "${var.host2_name}"
+    local_selfip1   = "${var.f5vm02ext}"
+    local_selfip2   = "${var.f5vm02tosrv}"
+    local_selfip3   = "${var.f5vm02frsrv}"
+    tosrvfl1       = "${var.f5vm01tosrvfl}"
+    tosrvfl2       = "${var.f5vm02tosrvfl}"
+    frsrvfl1       = "${var.f5vm01frsrvfl}"
+    frsrvfl2       = "${var.f5vm02frsrvfl}"
+    remote_selfip   = "${var.f5vm01ext}"
+    gateway         = "${local.ext_gw}"
+    dns_server      = "${var.dns_server}"
+    ntp_server      = "${var.ntp_server}"
+    timezone        = "${var.timezone}"
+    admin_user      = "${var.uname}"
+    admin_password  = "${var.upassword}"
+  }
+}
+```
+#### 7. Create the Application Services 3 (AS3) JSON payload for F5 VM01 and VM02. When AS3 is executed later it will create the F5 virtual server, pool, node, and client SSL profile.  
+Take the JSON file as3.json from this repository and render it as a template file called "as3_json" using some variables from variables.tf.
+```
+data "template_file" "as3_json" {
+  template = "${file("${path.module}/as3.json")}"
+
+  vars {
+    rg_name	    = "${azurerm_resource_group.main.name}"
+    subscription_id = "${var.SP["subscription_id"]}"
+    tenant_id	    = "${var.SP["tenant_id"]}"
+    client_id	    = "${var.SP["client_id"]}"
+    client_secret   = "${var.SP["client_secret"]}"
+  }
+}
+```
+#### 8. Create F5 VMs. During creation, copy the "vm_onboard" script created in Step#5. to the F5 filesystem at /var/lib/waagent/CustomData. 
+```
+resource "azurerm_virtual_machine" "f5vm01" {
+  name                         = "${var.prefix}-f5vm01"
+  location                     = "${azurerm_resource_group.main.location}"
+  resource_group_name          = "${azurerm_resource_group.main.name}"
+  primary_network_interface_id = "${azurerm_network_interface.vm01-mgmt-nic.id}"
+  network_interface_ids        = ["${azurerm_network_interface.vm01-mgmt-nic.id}", "${azurerm_network_interface.vm01-ext-nic.id}", "${azurerm_network_interface.vm01-tosrv-nic.id}", "${azurerm_network_interface.vm01-frsrv-nic.id}"]
+  vm_size                      = "${var.instance_type}"
+  availability_set_id          = "${azurerm_availability_set.avset.id}"
+
+  # Uncomment this line to delete the OS disk automatically when deleting the VM
+  delete_os_disk_on_termination = true
+
+
+  # Uncomment this line to delete the data disks automatically when deleting the VM
+  delete_data_disks_on_termination = true
+
+  storage_image_reference {
+    publisher = "f5-networks"
+    offer     = "${var.product}"
+    sku       = "${var.image_name}"
+    version   = "${var.bigip_version}"
+  }
+
+  storage_os_disk {
+    name              = "${var.prefix}vm01-osdisk"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+    disk_size_gb      = "80"
+  }
+
+  os_profile {
+    computer_name  = "${var.prefix}vm01"
+    admin_username = "${var.uname}"
+    admin_password = "${var.upassword}"
+    custom_data    = "${data.template_file.vm_onboard.rendered}"
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
+  plan {
+    name          = "${var.image_name}"
+    publisher     = "f5-networks"
+    product       = "${var.product}"
+  }
+
+  tags {
+    Name           = "${var.environment}-f5vm01"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+
+resource "azurerm_virtual_machine" "f5vm02" {
+  name                         = "${var.prefix}-f5vm02"
+  location                     = "${azurerm_resource_group.main.location}"
+  resource_group_name          = "${azurerm_resource_group.main.name}"
+  primary_network_interface_id = "${azurerm_network_interface.vm02-mgmt-nic.id}"
+  network_interface_ids        = ["${azurerm_network_interface.vm02-mgmt-nic.id}", "${azurerm_network_interface.vm02-ext-nic.id}", "${azurerm_network_interface.vm02-tosrv-nic.id}", "${azurerm_network_interface.vm02-frsrv-nic.id}"]
+  vm_size                      = "${var.instance_type}"
+  availability_set_id          = "${azurerm_availability_set.avset.id}"
+
+  # Uncomment this line to delete the OS disk automatically when deleting the VM
+  delete_os_disk_on_termination = true
+
+
+  # Uncomment this line to delete the data disks automatically when deleting the VM
+  delete_data_disks_on_termination = true
+
+  storage_image_reference {
+    publisher = "f5-networks"
+    offer     = "${var.product}"
+    sku       = "${var.image_name}"
+    version   = "${var.bigip_version}"
+  }
+
+  storage_os_disk {
+    name              = "${var.prefix}vm02-osdisk"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+    disk_size_gb      = "80"
+  }
+
+  os_profile {
+    computer_name  = "${var.prefix}vm02"
+    admin_username = "${var.uname}"
+    admin_password = "${var.upassword}"
+    custom_data    = "${data.template_file.vm_onboard.rendered}"
+}
+
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
+  plan {
+    name          = "${var.image_name}"
+    publisher     = "f5-networks"
+    product       = "${var.product}"
+  }
+
+  tags {
+    Name           = "${var.environment}-f5vm02"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+```
+#### 9. Create the Nginx Load Balancer (Ubuntu VM) 
+After boot install docker and run the custom docker container megamattzilla/nginx-lb which is pre-loaded with required configuration and hosted on docker hub. 
+```
+# Nginx Load Balancer VM
+resource "azurerm_virtual_machine" "nginxlb01" {
+    name                  = "nginxlb01"
+    location                     = "${azurerm_resource_group.main.location}"
+    resource_group_name          = "${azurerm_resource_group.main.name}"
+
+    network_interface_ids = ["${azurerm_network_interface.nginxlb01-ext-nic.id}"]
+    vm_size               = "Standard_DS3_v2"
+
+    storage_os_disk {
+        name              = "nginxlb01Disk"
+        caching           = "ReadWrite"
+        create_option     = "FromImage"
+        managed_disk_type = "Premium_LRS"
+    }
+
+    storage_image_reference {
+        publisher = "Canonical"
+        offer     = "UbuntuServer"
+        sku       = "16.04.0-LTS"
+        version   = "latest"
+    }
+
+    os_profile {
+        computer_name  = "nginxlb01"
+        admin_username = "azureuser"
+        admin_password = "${var.upassword}"
+        custom_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y docker.io
+              docker run -d -p 80:80 --net=host --restart unless-stopped megamattzilla/nginx-lb
+              EOF
+    }
+
+    os_profile_linux_config {
+        disable_password_authentication = false
+    }
+
+  tags {
+    Name           = "${var.environment}-nginxlb01"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+```
+#### 10. Create the Nginx Application Server (Ubuntu VM) 
+After boot install docker and run the custom docker containers megamattzilla/nginx-node1 and nginx-node2 which is pre-loaded with required configuration and hosted on docker hub. 
+```
+# Nginx App Server VM
+resource "azurerm_virtual_machine" "nginxapp01" {
+    name                  = "nginxapp01"
+    location                     = "${azurerm_resource_group.main.location}"
+    resource_group_name          = "${azurerm_resource_group.main.name}"
+
+    network_interface_ids = ["${azurerm_network_interface.nginxapp01-ext-nic.id}"]
+    vm_size               = "Standard_DS3_v2"
+
+    storage_os_disk {
+        name              = "nginxapp01Disk"
+        caching           = "ReadWrite"
+        create_option     = "FromImage"
+        managed_disk_type = "Premium_LRS"
+    }
+
+    storage_image_reference {
+        publisher = "Canonical"
+        offer     = "UbuntuServer"
+        sku       = "16.04.0-LTS"
+        version   = "latest"
+    }
+
+    os_profile {
+        computer_name  = "nginxapp01"
+        admin_username = "azureuser"
+        admin_password = "${var.upassword}"
+        custom_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y docker.io
+              docker run -d -p 9001:9001 --name=nginx-node1 --restart unless-stopped megamattzilla/nginx-node1
+              docker run -d -p 9002:9002 --name=nginx-node2 --restart unless-stopped megamattzilla/nginx-node2
+              EOF
+    }
+
+    os_profile_linux_config {
+        disable_password_authentication = false
+    }
+
+  tags {
+    Name           = "${var.environment}-nginxapp01"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+```
+#### 11. Execute the "vm_onboard" script on each F5 Big-IP after boot. This will install and activate DO and AS3 modules. 
+```
+# Run Startup Script
+resource "azurerm_virtual_machine_extension" "f5vm01-run-startup-cmd" {
+  name                 = "${var.environment}-f5vm01-run-startup-cmd"
+  depends_on           = ["azurerm_virtual_machine.f5vm01", "azurerm_virtual_machine.nginxlb01"]
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.main.name}"
+  virtual_machine_name = "${azurerm_virtual_machine.f5vm01.name}"
+  publisher            = "Microsoft.OSTCExtensions"
+  type                 = "CustomScriptForLinux"
+  type_handler_version = "1.2"
+  # publisher            = "Microsoft.Azure.Extensions"
+  # type                 = "CustomScript"
+  # type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+    {
+        "commandToExecute": "bash /var/lib/waagent/CustomData"
+    }
+  SETTINGS
+
+  tags {
+    Name           = "${var.environment}-f5vm01-startup-cmd"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+
+resource "azurerm_virtual_machine_extension" "f5vm02-run-startup-cmd" {
+  name                 = "${var.environment}-f5vm02-run-startup-cmd"
+  depends_on           = ["azurerm_virtual_machine.f5vm02", "azurerm_virtual_machine.nginxlb01"]
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.main.name}"
+  virtual_machine_name = "${azurerm_virtual_machine.f5vm02.name}"
+  publisher            = "Microsoft.OSTCExtensions"
+  type                 = "CustomScriptForLinux"
+  type_handler_version = "1.2"
+  # publisher            = "Microsoft.Azure.Extensions"
+  # type                 = "CustomScript"
+  # type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+    {
+        "commandToExecute": "bash /var/lib/waagent/CustomData"
+    }
+  SETTINGS
+
+  tags {
+    Name           = "${var.environment}-f5vm02-startup-cmd"
+    environment    = "${var.environment}"
+    owner          = "${var.owner}"
+    group          = "${var.group}"
+    costcenter     = "${var.costcenter}"
+    application    = "${var.application}"
+  }
+}
+```
