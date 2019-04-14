@@ -4,7 +4,7 @@
 
 ![alt text](https://github.com/megamattzilla/f5_terraform/blob/master/nginx-f5-deployment.png "F5 and Nginx Deployment")
 
-## To get started, clone this repository to a system that has terraform installed
+### Getting Started- clone this repository to a system that has terraform installed
 
 ### Edit Variables
 
