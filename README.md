@@ -4,7 +4,7 @@
 
 ![alt text](https://github.com/megamattzilla/f5_terraform/blob/master/nginx-f5-deployment.png "F5 and Nginx Deployment")
 
-### Getting Started- clone this repository to a system that has terraform installed. Then complete the Prerequisites [on this page](https://github.com/megamattzilla/f5_terraform/blob/master/Azure_Secure_Enclave_Public_DMZ/README.md). 
+### Getting Started- clone this repository to a system that has terraform installed. Then complete the Prerequisites [on this page](https://github.com/megamattzilla/f5_terraform/blob/master/Azure_Secure_Enclave_Public_DMZ/README.md#prerequisites). 
 
 ### Edit Variables
 
